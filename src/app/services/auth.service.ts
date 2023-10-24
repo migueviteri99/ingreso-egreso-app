@@ -1,3 +1,4 @@
+import { getFirestore } from 'firebase/firestore';
 import { Injectable } from '@angular/core';
 import {
   Auth,
@@ -11,20 +12,31 @@ import {
   sendEmailVerification,
   User
 } from '@angular/fire/auth';
+import { Store } from '@ngrx/store';
 
-import { map } from "rxjs";
+import { AppState } from '../app.reducer';
+import * as authActions from '../auth/auth.actions';
+import { Usuario } from '../models/usuario.model';
+import { Subscription } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  constructor(private auth: Auth) {
+  userSubcription!: Subscription; // sirve para destruir la subscripcion, pero en mi caso no funcionó.
+
+  constructor(private auth: Auth, private store: Store<AppState>) {
   }
 
   initAuthListerer() {
     onAuthStateChanged(this.auth, (user: any) => {
-      console.log(user);
+      if (user){
+        const tempUser = new Usuario(user.uid, 'Miguel Viteri', user.email);
+        this.store.dispatch(authActions.setUser({user: tempUser}));
+      }else {
+        this.store.dispatch(authActions.unSetUser());
+      }
     });
   }
 
